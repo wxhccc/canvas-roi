@@ -1,8 +1,8 @@
 {
   "name": "@wxhccc/canvas-roi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
-  "main": "lib/index.common.js",
+  "main": "lib/index.js",
   "module": "lib/index.es.js",
   "types": "types/index.d.ts",
   "scripts": {
@@ -14,7 +14,8 @@
     "test": "jest"
   },
   "files": [
-    "lib"
+    "lib",
+    "types"
   ],
   "devDependencies": {
     "@babel/core": "^7.7.4",
