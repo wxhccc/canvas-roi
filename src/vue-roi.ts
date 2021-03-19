@@ -1,13 +1,12 @@
-import './core/types';
-import { CreateElement, VueConstructor } from 'vue';
-import CanvasRoi, { publicMethods, optionsTypes, eventNames } from './core';
-import './vue-roi.css';
-import { RoiOptions } from './core/options';
+import { defineComponent, h, App } from "vue";
+import CanvasRoi, { publicMethods, optionsTypes, eventNames } from "./core";
+import "./vue-roi.css";
+import { RoiOptions, RoiPath, ROIEvents } from "./types";
 
 function getProxyMethod() {
-  const proxyMethods: { [key: string]: (...args: any[]) => any } = {};
+  const proxyMethods: { [key: string]: (...args: unknown[]) => unknown } = {};
   publicMethods.forEach((name) => {
-    proxyMethods[name] = function (...args: any) {
+    proxyMethods[name] = function (...args: unknown[]) {
       return this.callInstanceMethod(name, ...args);
     };
   });
@@ -16,33 +15,33 @@ function getProxyMethod() {
 
 const propTypes = optionsTypes();
 
-const CanvasRoiComponent = {
-  name: 'CanvasRoi',
+const CanvasRoiComponent = defineComponent({
+  name: "CanvasRoi",
   props: {
     options: {
       type: Object,
-      default: (): RoiOptions => ({})
+      default: (): RoiOptions => ({}),
     },
     value: {
       type: Array,
-      default: (): RoiPath[] => ([])
+      default: (): RoiPath[] => [],
     },
-    ...propTypes
+    ...propTypes,
   },
+  emits: eventNames,
   data() {
-    const $roi: CanvasRoi = null
     return {
-      $instanceId: +new Date() + Math.random(),
-      $roi,
-      selfCurrentType: ''
+      $_instanceId: +new Date() + Math.random(),
+      $_roi: null as CanvasRoi | null,
+      selfCurrentType: "",
     };
   },
   mounted() {
-    this.$roi = new CanvasRoi(this.$el, this.handledOptions);
-    this.value && this.updateValue(this.value);
+    this.$_roi = new CanvasRoi(this.$el, this.handledOptions);
+    this.value && this.updateValue(this.value as RoiPath[]);
   },
   destroy() {
-    this.$roi && this.$roi.destroy();
+    this.$_roi && this.$_roi.destroy();
   },
   computed: {
     handledEvents() {
@@ -52,42 +51,51 @@ const CanvasRoiComponent = {
       });
       return events;
     },
-    handledOptions() {
+    handledOptions(): RoiOptions {
       return { ...this.$props, ...this.options, ...this.handledEvents };
-    }
+    },
   },
   watch: {
-    value: 'updateValue',
-    handledOptions: 'resetVueOptions'
+    value: "updateValue",
+    handledOptions: "resetVueOptions",
   },
   methods: {
     callInstanceMethod(methodName: string, ...args: any[]) {
-      return this.$roi ? this.$roi[methodName](...args) : undefined;
+      const instance = this.$_roi as any;
+      if (
+        !instance ||
+        !instance[methodName] ||
+        typeof instance[methodName] !== "function"
+      )
+        return;
+      return instance[methodName](...args);
     },
     updateValue(value: RoiPath[]) {
-      this.callInstanceMethod('setValue', value);
+      this.callInstanceMethod("setValue", value);
     },
-    emitEvent(name: ROIEvents, ...args: any[]) {
+    emitEvent<T>(name: ROIEvents, ...args: T[]) {
       const cusHandler = this.options[name] || this[name];
-      typeof cusHandler === 'function' && cusHandler.apply(this, args);
+      typeof cusHandler === "function" && cusHandler.apply(this, args);
       this.$emit(name, ...args);
     },
     resetVueOptions(value: RoiOptions) {
-      this.callInstanceMethod('resetOptions', value);
+      this.callInstanceMethod("resetOptions", value);
     },
-    ...getProxyMethod()
+    ...getProxyMethod(),
   },
-  render(h: CreateElement) {
-    return h('div', {
-      class: 'canvas-roi',
-      attrs: {
-        'data-id': this.$instanceId
-      }
-    }, this.$slots.default);
+  render() {
+    return h(
+      "div",
+      {
+        class: "canvas-roi",
+        "data-id": this.$data.$_instanceId,
+      },
+      this.$slots.default
+    );
   },
-  install(Vue: VueConstructor) {
-    Vue.component(CanvasRoi.name, CanvasRoi);
-  }
-};
+  install(app: App) {
+    app.component(CanvasRoi.name, CanvasRoi);
+  },
+});
 
 export default CanvasRoiComponent;

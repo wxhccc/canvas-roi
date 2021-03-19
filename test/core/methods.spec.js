@@ -1,37 +1,42 @@
 /* eslint-env node, jest */
-import 'jest-canvas-mock';
-import { CanvasRoi } from '../../lib';
+import "jest-canvas-mock";
+import { CanvasRoi } from "../../dist/index.es";
 
 // 测试实例方法的调用
-const testPaths = [{
-  type: 'rect',
-  points: [{ x: 0.12, y: 0.188 }, { x: 0.375, y: 0.54 }],
-  inner: true,
-}];
+const testPaths = [
+  {
+    type: "rect",
+    points: [
+      { x: 0.12, y: 0.188 },
+      { x: 0.375, y: 0.54 },
+    ],
+    inner: true,
+  },
+];
 
-describe('mount', () => {
-  it('would append canvas element to container', () => {
+describe("mount", () => {
+  it("would append canvas element to container", () => {
     const instance = new CanvasRoi();
-    expect(instance).not.toHaveProperty('$el');
+    expect(instance).not.toHaveProperty("$el");
     instance.mount(document.body);
-    expect(instance).toHaveProperty('$el');
+    expect(instance).toHaveProperty("$el");
     expect(instance.$cvs).toBeInstanceOf(HTMLCanvasElement);
   });
 });
 
-describe('resetOptions', () => {
-  it('update properties which are not object', () => {
+describe("resetOptions", () => {
+  it("update properties which are not object", () => {
     const options = {
       readonly: true,
       canvasScale: 3,
-      allowTypes: ['rect'],
+      allowTypes: ["rect"],
       operateFocusOnly: false,
       digits: 4,
     };
     const instance = new CanvasRoi(null, options);
     expect(instance.$opts).toMatchObject(options);
   });
-  it('should merge properties which are object', () => {
+  it("should merge properties which are object", () => {
     const globalStyles = {
       lineWidth: 4,
     };
@@ -41,8 +46,8 @@ describe('resetOptions', () => {
   });
 });
 
-describe('scale', () => {
-  it('switch px to scale value between 0 and 1 through $cvsSize/$size', () => {
+describe("scale", () => {
+  it("switch px to scale value between 0 and 1 through $cvsSize/$size", () => {
     const orgSize = { width: 300, height: 100 };
     const instance = new CanvasRoi(document.body, orgSize);
     // 默认使用$cvsSize做转换
@@ -51,38 +56,43 @@ describe('scale', () => {
     expect(instance.scale({ x: 150, y: 50 }, true)).toEqual({ x: 0.5, y: 0.5 });
   });
 });
-describe('invert', () => {
-  it('switch scale value between 0 and 1 to px through $cvsSize/$size', () => {
+describe("invert", () => {
+  it("switch scale value between 0 and 1 to px through $cvsSize/$size", () => {
     const orgSize = { width: 300, height: 100 };
     const instance = new CanvasRoi(document.body, orgSize);
     // 默认使用$cvsSize做转换
     expect(instance.invert({ x: 0.25, y: 0.25 })).toEqual({ x: 150, y: 50 });
     // 也可以使用$size做转换
-    expect(instance.invert({ x: 0.5, y: 0.5 }, true)).toEqual({ x: 150, y: 50 });
+    expect(instance.invert({ x: 0.5, y: 0.5 }, true)).toEqual({
+      x: 150,
+      y: 50,
+    });
   });
 });
-describe('setValue', () => {
-  it('should work', () => {
+describe("setValue", () => {
+  it("should work", () => {
     const instance = new CanvasRoi(document.body, { width: 300, height: 100 });
     instance.setValue(testPaths);
-    expect(instance.paths).toEqual(instance._switchCoordsScale(testPaths, true));
+    expect(instance.paths).toEqual(
+      instance._switchCoordsScale(testPaths, true)
+    );
   });
 });
-describe('choosePath', () => {
-  it('should work', () => {
+describe("choosePath", () => {
+  it("should work", () => {
     const instance = new CanvasRoi(document.body, { width: 300, height: 100 });
     instance.setValue(testPaths);
     instance.choosePath(0);
     expect(instance.choseIndex).toBe(0);
   });
 });
-describe('destroy', () => {
-  it('should remove event listener and dom', () => {
-    document.body.innerHTML = '';
+describe("destroy", () => {
+  it("should remove event listener and dom", () => {
+    document.body.innerHTML = "";
     const instance = new CanvasRoi(document.body, { width: 300, height: 100 });
     expect(instance.$cvs).toBeTruthy();
     instance.destroy();
     expect(instance.$cvs).toBeFalsy();
-    expect(document.body.querySelector('canvas')).toBeFalsy();
+    expect(document.body.querySelector("canvas")).toBeFalsy();
   });
 });
