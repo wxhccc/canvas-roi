@@ -1,83 +1,123 @@
-import './core/types';
-import { CreateElement, VueConstructor } from 'vue';
-import CanvasRoi from './core';
-import './vue-roi.css';
-import { RoiOptions } from './core/options';
-declare const CanvasRoiComponent: {
-    name: string;
-    props: {
-        readonly?: import("./core/options").PropOptions<any>;
-        canvasScale?: import("./core/options").PropOptions<any>;
-        globalStyles?: import("./core/options").PropOptions<any>;
-        focusStyles?: import("./core/options").PropOptions<any>;
-        operateFocusOnly?: import("./core/options").PropOptions<any>;
-        operateCircle?: import("./core/options").PropOptions<any>;
-        sensitive?: import("./core/options").PropOptions<any>;
-        allowTypes?: import("./core/options").PropOptions<any>;
-        singleType?: import("./core/options").PropOptions<any>;
-        currentType?: import("./core/options").PropOptions<any>;
-        pathCanMove?: import("./core/options").PropOptions<any>;
-        digits?: import("./core/options").PropOptions<any>;
-        distanceCheck?: import("./core/options").PropOptions<any>;
-        tinyRectSize?: import("./core/options").PropOptions<any>;
-        rectAspectRatio?: import("./core/options").PropOptions<any>;
-        tinyCircleRadius?: import("./core/options").PropOptions<any>;
-        blurStrokeOpacity?: import("./core/options").PropOptions<any>;
-        ignoreInvalidSelect?: import("./core/options").PropOptions<any>;
-        rectCursors?: import("./core/options").PropOptions<any>;
-        maxPath?: import("./core/options").PropOptions<any>;
-        autoFit?: import("./core/options").PropOptions<any>;
-        initChoseIndex?: import("./core/options").PropOptions<any>;
-        width?: import("./core/options").PropOptions<any>;
-        height?: import("./core/options").PropOptions<any>;
-        ready?: import("./core/options").PropOptions<any>;
-        input?: import("./core/options").PropOptions<any>;
-        change?: import("./core/options").PropOptions<any>;
-        choose?: import("./core/options").PropOptions<any>;
-        resize?: import("./core/options").PropOptions<any>;
-        'draw-start'?: import("./core/options").PropOptions<any>;
-        'draw-end'?: import("./core/options").PropOptions<any>;
-        'modify-start'?: import("./core/options").PropOptions<any>;
-        options: {
-            type: ObjectConstructor;
-            default: () => RoiOptions;
-        };
-        value: {
-            type: ArrayConstructor;
-            default: () => RoiPath[];
-        };
+import CanvasRoi from "./core";
+import "./vue-roi.css";
+import { RoiOptions, RoiPath, ROIEvents } from "./types";
+declare const CanvasRoiComponent: import("vue").DefineComponent<
+  {
+    readonly?: import("./types").PropOptions<any> | undefined;
+    canvasScale?: import("./types").PropOptions<any> | undefined;
+    globalStyles?: import("./types").PropOptions<any> | undefined;
+    focusStyles?: import("./types").PropOptions<any> | undefined;
+    operateFocusOnly?: import("./types").PropOptions<any> | undefined;
+    operateCircle?: import("./types").PropOptions<any> | undefined;
+    sensitive?: import("./types").PropOptions<any> | undefined;
+    allowTypes?: import("./types").PropOptions<any> | undefined;
+    singleType?: import("./types").PropOptions<any> | undefined;
+    currentType?: import("./types").PropOptions<any> | undefined;
+    pathCanMove?: import("./types").PropOptions<any> | undefined;
+    digits?: import("./types").PropOptions<any> | undefined;
+    distanceCheck?: import("./types").PropOptions<any> | undefined;
+    tinyRectSize?: import("./types").PropOptions<any> | undefined;
+    rectAspectRatio?: import("./types").PropOptions<any> | undefined;
+    tinyCircleRadius?: import("./types").PropOptions<any> | undefined;
+    blurStrokeOpacity?: import("./types").PropOptions<any> | undefined;
+    ignoreInvalidSelect?: import("./types").PropOptions<any> | undefined;
+    rectCursors?: import("./types").PropOptions<any> | undefined;
+    maxPath?: import("./types").PropOptions<any> | undefined;
+    autoFit?: import("./types").PropOptions<any> | undefined;
+    initChoseIndex?: import("./types").PropOptions<any> | undefined;
+    width?: import("./types").PropOptions<any> | undefined;
+    height?: import("./types").PropOptions<any> | undefined;
+    ready?: import("./types").PropOptions<any> | undefined;
+    input?: import("./types").PropOptions<any> | undefined;
+    change?: import("./types").PropOptions<any> | undefined;
+    choose?: import("./types").PropOptions<any> | undefined;
+    resize?: import("./types").PropOptions<any> | undefined;
+    "draw-start"?: import("./types").PropOptions<any> | undefined;
+    "draw-end"?: import("./types").PropOptions<any> | undefined;
+    "modify-start"?: import("./types").PropOptions<any> | undefined;
+    options: {
+      type: ObjectConstructor;
+      default: () => RoiOptions;
     };
-    data(): {
-        $instanceId: number;
-        $roi: CanvasRoi;
-        selfCurrentType: string;
+    value: {
+      type: ArrayConstructor;
+      default: () => RoiPath[];
     };
-    mounted(): void;
-    destroy(): void;
-    computed: {
-        handledEvents(): {
-            input?: () => void;
-            change?: () => void;
-            resize?: () => void;
-            ready?: () => void;
-            choose?: () => void;
-            "draw-start"?: () => void;
-            "draw-end"?: () => void;
-            "modify-start"?: () => void;
-        };
-        handledOptions(): any;
+  },
+  unknown,
+  {
+    $_instanceId: number;
+    $_roi: CanvasRoi | null;
+    selfCurrentType: string;
+  },
+  {
+    handledEvents(): {
+      ready?: (() => void) | undefined;
+      input?: (() => void) | undefined;
+      change?: (() => void) | undefined;
+      choose?: (() => void) | undefined;
+      resize?: (() => void) | undefined;
+      "draw-start"?: (() => void) | undefined;
+      "draw-end"?: (() => void) | undefined;
+      "modify-start"?: (() => void) | undefined;
     };
-    watch: {
-        value: string;
-        handledOptions: string;
-    };
-    methods: {
-        callInstanceMethod(methodName: string, ...args: any[]): any;
-        updateValue(value: RoiPath[]): void;
-        emitEvent(name: ROIEvents, ...args: any[]): void;
-        resetVueOptions(value: RoiOptions): void;
-    };
-    render(h: CreateElement): import("vue").VNode;
-    install(Vue: VueConstructor): void;
-};
+    handledOptions(): RoiOptions;
+  },
+  {
+    callInstanceMethod(methodName: string, ...args: any[]): any;
+    updateValue(value: RoiPath[]): void;
+    emitEvent<T>(name: ROIEvents, ...args: T[]): void;
+    resetVueOptions(value: RoiOptions): void;
+  },
+  import("vue").ComponentOptionsMixin,
+  import("vue").ComponentOptionsMixin,
+  ROIEvents[],
+  ROIEvents,
+  import("vue").VNodeProps &
+    import("vue").AllowedComponentProps &
+    import("vue").ComponentCustomProps,
+  Readonly<
+    {
+      options: Record<string, any>;
+      value: unknown[];
+    } & {
+      ready?: any;
+      input?: any;
+      change?: any;
+      choose?: any;
+      resize?: any;
+      "draw-start"?: any;
+      "draw-end"?: any;
+      "modify-start"?: any;
+      width?: any;
+      height?: any;
+      readonly?: any;
+      canvasScale?: any;
+      globalStyles?: any;
+      focusStyles?: any;
+      operateFocusOnly?: any;
+      operateCircle?: any;
+      sensitive?: any;
+      allowTypes?: any;
+      singleType?: any;
+      currentType?: any;
+      pathCanMove?: any;
+      digits?: any;
+      distanceCheck?: any;
+      tinyRectSize?: any;
+      rectAspectRatio?: any;
+      tinyCircleRadius?: any;
+      blurStrokeOpacity?: any;
+      ignoreInvalidSelect?: any;
+      rectCursors?: any;
+      maxPath?: any;
+      autoFit?: any;
+      initChoseIndex?: any;
+    }
+  >,
+  {
+    options: Record<string, any>;
+    value: unknown[];
+  }
+>;
 export default CanvasRoiComponent;

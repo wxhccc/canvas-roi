@@ -1,4 +1,4 @@
-import './types';
+import { ROIEvents, ClickPathTypes, DragPathTypes } from "../types";
 export declare const publicMethods: string[];
 export declare const eventNames: ROIEvents[];
 export declare const clickPathTypes: ClickPathTypes[];
