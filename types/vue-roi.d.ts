@@ -39,7 +39,7 @@ declare const CanvasRoiComponent: import("vue").DefineComponent<
       type: ObjectConstructor;
       default: () => RoiOptions;
     };
-    value: {
+    modelValue: {
       type: ArrayConstructor;
       default: () => RoiPath[];
     };
@@ -66,20 +66,20 @@ declare const CanvasRoiComponent: import("vue").DefineComponent<
   {
     callInstanceMethod(methodName: string, ...args: any[]): any;
     updateValue(value: RoiPath[]): void;
-    emitEvent<T>(name: ROIEvents, ...args: T[]): void;
+    emitEvent(name: ROIEvents, ...args: any[]): void;
     resetVueOptions(value: RoiOptions): void;
   },
   import("vue").ComponentOptionsMixin,
   import("vue").ComponentOptionsMixin,
-  ROIEvents[],
-  ROIEvents,
+  string[],
+  string,
   import("vue").VNodeProps &
     import("vue").AllowedComponentProps &
     import("vue").ComponentCustomProps,
   Readonly<
     {
       options: Record<string, any>;
-      value: unknown[];
+      modelValue: unknown[];
     } & {
       ready?: any;
       input?: any;
@@ -117,7 +117,7 @@ declare const CanvasRoiComponent: import("vue").DefineComponent<
   >,
   {
     options: Record<string, any>;
-    value: unknown[];
+    modelValue: unknown[];
   }
 >;
 export default CanvasRoiComponent;

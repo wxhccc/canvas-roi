@@ -22,13 +22,13 @@ const CanvasRoiComponent = defineComponent({
       type: Object,
       default: (): RoiOptions => ({}),
     },
-    value: {
+    modelValue: {
       type: Array,
       default: (): RoiPath[] => [],
     },
     ...propTypes,
   },
-  emits: eventNames,
+  emits: ["update:modelValue"].concat(eventNames),
   data() {
     return {
       $_instanceId: +new Date() + Math.random(),
@@ -37,10 +37,12 @@ const CanvasRoiComponent = defineComponent({
     };
   },
   mounted() {
-    this.$_roi = new CanvasRoi(this.$el, this.handledOptions);
-    this.value && this.updateValue(this.value as RoiPath[]);
+    this.$nextTick(() => {
+      this.$_roi = new CanvasRoi(this.$el, this.handledOptions);
+      this.modelValue && this.updateValue(this.modelValue as RoiPath[]);
+    });
   },
-  destroy() {
+  beforeUnmount() {
     this.$_roi && this.$_roi.destroy();
   },
   computed: {
@@ -56,7 +58,7 @@ const CanvasRoiComponent = defineComponent({
     },
   },
   watch: {
-    value: "updateValue",
+    modelValue: "updateValue",
     handledOptions: "resetVueOptions",
   },
   methods: {
@@ -73,10 +75,11 @@ const CanvasRoiComponent = defineComponent({
     updateValue(value: RoiPath[]) {
       this.callInstanceMethod("setValue", value);
     },
-    emitEvent<T>(name: ROIEvents, ...args: T[]) {
+    emitEvent(name: ROIEvents, ...args: any[]) {
       const cusHandler = this.options[name] || this[name];
       typeof cusHandler === "function" && cusHandler.apply(this, args);
-      this.$emit(name, ...args);
+      const vueEventName = name === "input" ? "update:modelValue" : name;
+      this.$emit(vueEventName, ...args);
     },
     resetVueOptions(value: RoiOptions) {
       this.callInstanceMethod("resetOptions", value);

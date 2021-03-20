@@ -66,10 +66,22 @@ function bindMethods(methods) {
   }
 }
 
-const booleanType = (value) => ({ type: Boolean, default: value });
-const objectType = (value) => ({ type: Object, default: () => value });
-const arrayType = (value) => ({ type: Array, default: () => value });
-const numberType = (value) => ({ type: Number, default: value });
+const booleanType = (value) => ({
+  type: Boolean,
+  default: value,
+});
+const objectType = (value) => ({
+  type: Object,
+  default: () => value,
+});
+const arrayType = (value) => ({
+  type: Array,
+  default: () => value,
+});
+const numberType = (value) => ({
+  type: Number,
+  default: value,
+});
 function optionsTypes() {
   return {
     readonly: booleanType(false),
@@ -705,6 +717,7 @@ class CanvasRoi {
     this._ElObserver.observe(this.$el);
   }
   _sizeChangeWatcher() {
+    console.log(1111111);
     clearTimeout(this.resizeTicker);
     this.resizeTicker = window.setTimeout(() => {
       this._emitEvent("resize");
@@ -734,7 +747,7 @@ class CanvasRoi {
   }
   _emitEvent(name, ...args) {
     const callback = this.$opts[name];
-    typeof callback === "function" && callback(...args);
+    typeof callback === "function" && callback.call(this, ...args);
   }
   /**
    * check methods
@@ -893,11 +906,10 @@ class CanvasRoi {
     this.redrawCanvas(true);
   }
   resetCanvas() {
-    if (!this.$el) return;
-    const { offsetWidth, offsetHeight } = this.$el;
+    const { offsetWidth, offsetHeight } = this.$el || {};
     const { canvasScale = 2, width: optWidth, height: optHeight } = this.$opts;
-    const width = optWidth || offsetWidth;
-    const height = offsetHeight || optHeight || 0;
+    const width = optWidth || offsetWidth || 0;
+    const height = optHeight || offsetHeight || 0;
     this.$size = { width, height };
     this.$cvsSize = {
       width: width * canvasScale,
@@ -943,18 +955,20 @@ class CanvasRoi {
     this._drawRoiPaths();
   }
   clearCanvas() {
-    this.$ctx && this.$ctx.clearRect(0, 0, this.$cvs.width, this.$cvs.height);
+    if (this.$ctx && this.$cvs)
+      this.$ctx.clearRect(0, 0, this.$cvs.width, this.$cvs.height);
   }
   redrawCanvas(isClear) {
     this._drawRoiPaths(undefined, !isClear);
   }
   exportImageFromCanvas(resolve) {
-    this.$cvs.toBlob((file) => {
-      resolve(file ? window.URL.createObjectURL(file) : "");
-    });
+    this.$cvs &&
+      this.$cvs.toBlob((file) => {
+        resolve(file ? window.URL.createObjectURL(file) : "");
+      });
   }
   customDrawing(fn) {
-    if (typeof fn !== "function") return;
+    if (!this.$ctx || typeof fn !== "function") return;
     this.$ctx.save();
     fn.call(this, this);
     this.redrawCanvas();
@@ -1020,13 +1034,13 @@ const CanvasRoiComponent = defineComponent({
       type: Object,
       default: () => ({}),
     },
-    value: {
+    modelValue: {
       type: Array,
       default: () => [],
     },
     ...propTypes,
   },
-  emits: eventNames,
+  emits: ["update:modelValue"].concat(eventNames),
   data() {
     return {
       $_instanceId: +new Date() + Math.random(),
@@ -1035,10 +1049,12 @@ const CanvasRoiComponent = defineComponent({
     };
   },
   mounted() {
-    this.$_roi = new CanvasRoi(this.$el, this.handledOptions);
-    this.value && this.updateValue(this.value);
+    this.$nextTick(() => {
+      this.$_roi = new CanvasRoi(this.$el, this.handledOptions);
+      this.modelValue && this.updateValue(this.modelValue);
+    });
   },
-  destroy() {
+  beforeUnmount() {
     this.$_roi && this.$_roi.destroy();
   },
   computed: {
@@ -1054,7 +1070,7 @@ const CanvasRoiComponent = defineComponent({
     },
   },
   watch: {
-    value: "updateValue",
+    modelValue: "updateValue",
     handledOptions: "resetVueOptions",
   },
   methods: {
@@ -1074,7 +1090,8 @@ const CanvasRoiComponent = defineComponent({
     emitEvent(name, ...args) {
       const cusHandler = this.options[name] || this[name];
       typeof cusHandler === "function" && cusHandler.apply(this, args);
-      this.$emit(name, ...args);
+      const vueEventName = name === "input" ? "update:modelValue" : name;
+      this.$emit(vueEventName, ...args);
     },
     resetVueOptions(value) {
       this.callInstanceMethod("resetOptions", value);

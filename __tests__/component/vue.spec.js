@@ -1,6 +1,7 @@
 /* eslint-env node, jest */
 import { mount } from "@vue/test-utils";
 import CanvasRoi from "../../dist/index.es";
+import { nextTick } from "vue";
 
 // 测试实例方法的调用
 const testPaths = [
@@ -21,8 +22,9 @@ describe("CanvasRoi.vue", () => {
       const wrapper = mount(CanvasRoi);
       expect(wrapper.element.tagName).toBe("DIV");
     });
-    it("canvas element render correct", () => {
+    it("canvas element render correct", async () => {
       const wrapper = mount(CanvasRoi);
+      await nextTick();
       expect(wrapper.find("canvas").exists()).toBe(true);
     });
   });
@@ -41,7 +43,7 @@ describe("CanvasRoi.vue", () => {
     const checkContextProperties = (instance, property, value) => {
       expect(instance.$ctx).toHaveProperty(property, value);
     };
-    it(":options - set core instance config immediate", () => {
+    it(":options - set core instance config immediate", async () => {
       const options = {
         ...defaultSize,
         canvasScale: 4,
@@ -52,20 +54,22 @@ describe("CanvasRoi.vue", () => {
       const wrapper = mount(CanvasRoi, {
         propsData: { options },
       });
+      await nextTick();
       checkCanvasSize(wrapper.vm.$_roi, options, options.canvasScale);
       checkContextProperties(wrapper.vm.$_roi, "fillStyle", "#ff0000");
     });
     describe("check proxy properties", () => {
-      it(":canvasScale - scale canvas inner size", () => {
+      it(":canvasScale - scale canvas inner size", async () => {
         const wrapper = mount(CanvasRoi, {
           propsData: {
             ...defaultSize,
             canvasScale: 3,
           },
         });
+        await nextTick();
         checkCanvasSize(wrapper.vm.$_roi, defaultSize, 3);
       });
-      it(":globalStyles - set context's global styles", () => {
+      it(":globalStyles - set context's global styles", async () => {
         const wrapper = mount(CanvasRoi, {
           propsData: {
             globalStyles: {
@@ -73,6 +77,7 @@ describe("CanvasRoi.vue", () => {
             },
           },
         });
+        await nextTick();
         checkContextProperties(wrapper.vm.$_roi, "fillStyle", "#ff0000");
       });
     });
@@ -81,10 +86,11 @@ describe("CanvasRoi.vue", () => {
   describe("methods", () => {
     // 测试事件是否成功代理到vue组件实例上
     describe("scale", () => {
-      it("should work", () => {
+      it("should work", async () => {
         const wrapper = mount(CanvasRoi, {
           propsData: { ...defaultSize },
         });
+        await nextTick();
         const instance = wrapper.vm;
         // 默认使用$cvsSize做转换
         expect(instance.scale({ x: 150, y: 50 })).toEqual({ x: 0.25, y: 0.25 });
@@ -96,10 +102,11 @@ describe("CanvasRoi.vue", () => {
       });
     });
     describe("setValue", () => {
-      it("should work", () => {
+      it("should work", async () => {
         const wrapper = mount(CanvasRoi, {
           propsData: { ...defaultSize },
         });
+        await nextTick();
         const instance = wrapper.vm;
         instance.setValue(testPaths);
         expect(instance.$_roi.paths).toEqual(
@@ -110,29 +117,33 @@ describe("CanvasRoi.vue", () => {
   });
   // 测试events事件代理
   describe("@events", () => {
-    it("@ready - will trigger when component ready", () => {
+    it("@ready - will trigger when component ready", async () => {
       const wrapper = mount(CanvasRoi, {
         propsData: { ...defaultSize },
       });
+      await nextTick();
       expect(wrapper.emitted().ready).toBeTruthy();
     });
-    it("@input & @change - will trigger when value change", () => {
+    it("@update:modelValue & @change - will trigger when value change", async () => {
       const wrapper = mount(CanvasRoi, {
         propsData: { ...defaultSize },
       });
+      await nextTick();
       const instance = wrapper.vm;
       // 由于无法模拟组件内部生成路径，故使用外部方法来测试事件
       instance.setValue(testPaths);
       expect(instance.$_roi.paths.length).toBe(1);
       instance.$_roi.choseIndex = 0;
       instance.$_roi._deletePath();
-      expect(wrapper.emitted().input[0]).toEqual([[]]);
+
+      expect(wrapper.emitted()["update:modelValue"][0]).toEqual([[]]);
       expect(wrapper.emitted().change).toEqual([["delete", 0]]);
     });
-    it("@choose - will trigger when path chose", () => {
+    it("@choose - will trigger when path chose", async () => {
       const wrapper = mount(CanvasRoi, {
         propsData: { ...defaultSize },
       });
+      await nextTick();
       const instance = wrapper.vm;
       // 由于无法模拟组件内部生成路径，故使用外部方法来测试事件
       instance.setValue(testPaths);

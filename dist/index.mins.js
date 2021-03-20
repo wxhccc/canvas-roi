@@ -8,7 +8,7 @@
           "undefined" != typeof globalThis
             ? globalThis
             : t || self).CanvasRoi = {}),
-        t.vue
+        t.Vue
       );
 })(this, function (t, e) {
   "use strict";
@@ -118,19 +118,19 @@
     const e = l(t);
     this._drawRoiPaths("rect" === this.newPath.type ? v.call(this, e) : e);
   }
-  function g(t, e, s) {
+  function $(t, e, s) {
     const { distanceCheck: i, canvasScale: n } = this.$opts,
       h = s || i;
     return "function" == typeof h
       ? h(t, e)
       : Math.abs(t.x - e.x) < h * n && Math.abs(t.y - e.y) < h * n;
   }
-  function $(t) {
+  function g(t) {
     let e = l(t);
     const { points: s } = this.newPath;
     if (((this.pathPointsCoincide = !1), s.length > 2)) {
       const t = s[0];
-      g.call(this, e, t) && ((e = t), (this.pathPointsCoincide = !0));
+      $.call(this, e, t) && ((e = t), (this.pathPointsCoincide = !0));
     }
     this._drawRoiPaths(e);
   }
@@ -181,7 +181,7 @@
       const o = t[h],
         a = t[(h + 1) % s],
         r = n * i,
-        c = g.call(this, o, e, r) ? h : g.call(this, a, e, r) ? h + 1 : -1;
+        c = $.call(this, o, e, r) ? h : $.call(this, a, e, r) ? h + 1 : -1;
       if (c > -1) return { pointIndex: c };
       if (
         (this.$ctx.beginPath(),
@@ -374,7 +374,7 @@
         : (e
             ? s
               ? x.call(this, t)
-              : $.call(this, t)
+              : g.call(this, t)
             : n
             ? w.call(this, t)
             : C.call(this, t),
@@ -592,7 +592,8 @@
         this._ElObserver.observe(this.$el));
     }
     _sizeChangeWatcher() {
-      clearTimeout(this.resizeTicker),
+      console.log(1111111),
+        clearTimeout(this.resizeTicker),
         (this.resizeTicker = window.setTimeout(() => {
           this._emitEvent("resize"), this.resetCanvas();
         }, 50));
@@ -618,7 +619,7 @@
     }
     _emitEvent(t, ...e) {
       const s = this.$opts[t];
-      "function" == typeof s && s(...e);
+      "function" == typeof s && s.call(this, ...e);
     }
     _checkSingleType() {
       const { allowTypes: t, singleType: e, currentType: s } = this.$opts;
@@ -760,11 +761,10 @@
         this.redrawCanvas(!0);
     }
     resetCanvas() {
-      if (!this.$el) return;
-      const { offsetWidth: t, offsetHeight: e } = this.$el,
+      const { offsetWidth: t, offsetHeight: e } = this.$el || {},
         { canvasScale: s = 2, width: i, height: n } = this.$opts,
-        h = i || t,
-        o = e || n || 0;
+        h = i || t || 0,
+        o = n || e || 0;
       (this.$size = { width: h, height: o }),
         (this.$cvsSize = { width: h * s, height: o * s }),
         Object.assign(this.$cvs, this.$cvsSize),
@@ -800,18 +800,22 @@
         this._drawRoiPaths();
     }
     clearCanvas() {
-      this.$ctx && this.$ctx.clearRect(0, 0, this.$cvs.width, this.$cvs.height);
+      this.$ctx &&
+        this.$cvs &&
+        this.$ctx.clearRect(0, 0, this.$cvs.width, this.$cvs.height);
     }
     redrawCanvas(t) {
       this._drawRoiPaths(void 0, !t);
     }
     exportImageFromCanvas(t) {
-      this.$cvs.toBlob((e) => {
-        t(e ? window.URL.createObjectURL(e) : "");
-      });
+      this.$cvs &&
+        this.$cvs.toBlob((e) => {
+          t(e ? window.URL.createObjectURL(e) : "");
+        });
     }
     customDrawing(t) {
-      "function" == typeof t &&
+      this.$ctx &&
+        "function" == typeof t &&
         (this.$ctx.save(),
         t.call(this, this),
         this.redrawCanvas(),
@@ -846,20 +850,22 @@
       name: "CanvasRoi",
       props: {
         options: { type: Object, default: () => ({}) },
-        value: { type: Array, default: () => [] },
+        modelValue: { type: Array, default: () => [] },
         ...F,
       },
-      emits: i,
+      emits: ["update:modelValue"].concat(i),
       data: () => ({
         $_instanceId: +new Date() + Math.random(),
         $_roi: null,
         selfCurrentType: "",
       }),
       mounted() {
-        (this.$_roi = new A(this.$el, this.handledOptions)),
-          this.value && this.updateValue(this.value);
+        this.$nextTick(() => {
+          (this.$_roi = new A(this.$el, this.handledOptions)),
+            this.modelValue && this.updateValue(this.modelValue);
+        });
       },
-      destroy() {
+      beforeUnmount() {
         this.$_roi && this.$_roi.destroy();
       },
       computed: {
@@ -876,7 +882,7 @@
           return { ...this.$props, ...this.options, ...this.handledEvents };
         },
       },
-      watch: { value: "updateValue", handledOptions: "resetVueOptions" },
+      watch: { modelValue: "updateValue", handledOptions: "resetVueOptions" },
       methods: {
         callInstanceMethod(t, ...e) {
           const s = this.$_roi;
@@ -887,7 +893,9 @@
         },
         emitEvent(t, ...e) {
           const s = this.options[t] || this[t];
-          "function" == typeof s && s.apply(this, e), this.$emit(t, ...e);
+          "function" == typeof s && s.apply(this, e);
+          const i = "input" === t ? "update:modelValue" : t;
+          this.$emit(i, ...e);
         },
         resetVueOptions(t) {
           this.callInstanceMethod("resetOptions", t);

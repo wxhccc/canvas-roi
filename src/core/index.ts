@@ -160,6 +160,7 @@ export default class CanvasRoi implements BaseRoi {
   }
 
   _sizeChangeWatcher(): void {
+    console.log(1111111);
     clearTimeout(this.resizeTicker);
     this.resizeTicker = window.setTimeout(() => {
       this._emitEvent("resize");
@@ -192,7 +193,7 @@ export default class CanvasRoi implements BaseRoi {
 
   _emitEvent(name: ROIEvents, ...args: unknown[]): void {
     const callback = this.$opts[name];
-    typeof callback === "function" && callback(...args);
+    typeof callback === "function" && callback.call(this, ...args);
   }
 
   /**
@@ -379,11 +380,10 @@ export default class CanvasRoi implements BaseRoi {
   }
 
   resetCanvas(): void {
-    if (!this.$el) return;
-    const { offsetWidth, offsetHeight } = this.$el;
+    const { offsetWidth, offsetHeight } = this.$el || {};
     const { canvasScale = 2, width: optWidth, height: optHeight } = this.$opts;
-    const width = optWidth || offsetWidth;
-    const height = offsetHeight || optHeight || 0;
+    const width = optWidth || offsetWidth || 0;
+    const height = optHeight || offsetHeight || 0;
     this.$size = { width, height };
     this.$cvsSize = {
       width: width * canvasScale,
@@ -434,7 +434,8 @@ export default class CanvasRoi implements BaseRoi {
   }
 
   clearCanvas(): void {
-    this.$ctx && this.$ctx.clearRect(0, 0, this.$cvs!.width, this.$cvs!.height);
+    if (this.$ctx && this.$cvs)
+      this.$ctx.clearRect(0, 0, this.$cvs.width, this.$cvs.height);
   }
 
   redrawCanvas(isClear?: boolean): void {
@@ -442,17 +443,18 @@ export default class CanvasRoi implements BaseRoi {
   }
 
   exportImageFromCanvas(resolve: (url: string) => void): void {
-    this.$cvs!.toBlob((file) => {
-      resolve(file ? window.URL.createObjectURL(file) : "");
-    });
+    this.$cvs &&
+      this.$cvs.toBlob((file) => {
+        resolve(file ? window.URL.createObjectURL(file) : "");
+      });
   }
 
   customDrawing(fn: CustomHanlder): void {
-    if (typeof fn !== "function") return;
-    this.$ctx!.save();
+    if (!this.$ctx || typeof fn !== "function") return;
+    this.$ctx.save();
     fn.call(this, this);
     this.redrawCanvas();
-    this.$ctx!.restore();
+    this.$ctx.restore();
   }
 
   destroy(): void {
