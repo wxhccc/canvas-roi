@@ -21,7 +21,7 @@ function createConfig(config, plugins) {
   const output = Object.assign(
     {
       globals: {
-        vue: "vue",
+        vue: "Vue",
       },
     },
     "output" in config ? config.output : {}
