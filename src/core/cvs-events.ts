@@ -1,243 +1,256 @@
-import { Point, RoiPath } from "../types";
-import { clickPathTypes } from "./const";
+import type CanvasRoi from './'
+import { OperateCursor, Point, RoiPath } from '../types'
+import { clickPathTypes } from './const'
 import {
   getMousePoint,
   checkPointsEqual,
   getVirtualRectPoints,
   countDistance,
   fixRectPoints,
-} from "./utils";
+} from './utils'
 
-function keyPress(this: any, e: KeyboardEvent): void {
-  const key = e.key.toLowerCase();
+function keyPress(this: CanvasRoi, e: KeyboardEvent): void {
+  const key = e.key.toLowerCase()
   switch (key) {
-    case "backspace":
-    case "delete":
-      this._deletePath();
-      break;
-    case "t":
-      this._invertChosePath();
-      break;
+    case 'backspace':
+    case 'delete':
+      this._deletePath()
+      break
+    case 't':
+      this._invertChosePath()
+      break
     default:
-      break;
+      break
   }
 }
 
-function getRectEndPoint(this: any, truePoint: Point): Point {
-  const [startPoint] = this.newPath.points;
-  const { rectAspectRatio: ratio } = this.$opts;
+function getRectEndPoint(this: CanvasRoi, truePoint: Point): Point {
+  const [startPoint] = this.newPath.points
+  const { rectAspectRatio: ratio } = this.$opts
   return ratio > 0
     ? { x: truePoint.x, y: startPoint.y + ratio * (truePoint.x - startPoint.x) }
-    : truePoint;
+    : truePoint
 }
 
-function dragDrawingHandle(this: any, e: MouseEvent) {
+function dragDrawingHandle(this: CanvasRoi, e: MouseEvent) {
   !this.dragging &&
     (this.dragging = !checkPointsEqual(
       this.newPath.points[0],
       getMousePoint(e)
-    ));
-  const point = getMousePoint(e);
+    ))
+  const point = getMousePoint(e)
   this._drawRoiPaths(
-    this.newPath.type === "rect" ? getRectEndPoint.call(this, point) : point
-  );
+    this.newPath.type === 'rect' ? getRectEndPoint.call(this, point) : point
+  )
 }
 
 type CusDistanceCheck =
   | {
-      (oPoint: Point, dPoint: Point): boolean;
+      (oPoint: Point, dPoint: Point): boolean
     }
-  | number;
+  | number
 
 function checkPointsNearly(
-  this: any,
+  this: CanvasRoi,
   oPoint: Point,
   dPoint: Point,
   cusDistanceCheck?: CusDistanceCheck
 ): boolean {
-  const { distanceCheck, canvasScale } = this.$opts;
-  const checkValue = cusDistanceCheck || distanceCheck;
-  return typeof checkValue === "function"
+  const { distanceCheck, canvasScale } = this.$opts
+  const checkValue = cusDistanceCheck || distanceCheck
+  return typeof checkValue === 'function'
     ? checkValue(oPoint, dPoint)
     : Math.abs(oPoint.x - dPoint.x) < checkValue * canvasScale &&
-        Math.abs(oPoint.y - dPoint.y) < checkValue * canvasScale;
+        Math.abs(oPoint.y - dPoint.y) < checkValue * canvasScale
 }
 
-function clickDrawingHandle(this: any, e: MouseEvent) {
-  let endPoint = getMousePoint(e);
-  const { points } = this.newPath;
-  this.pathPointsCoincide = false;
+function clickDrawingHandle(this: CanvasRoi, e: MouseEvent) {
+  let endPoint = getMousePoint(e)
+  const { points } = this.newPath
+  this.pathPointsCoincide = false
 
   if (points.length > 2) {
-    const startPoint = points[0];
+    const startPoint = points[0]
     if (checkPointsNearly.call(this, endPoint, startPoint)) {
-      endPoint = startPoint;
-      this.pathPointsCoincide = true;
+      endPoint = startPoint
+      this.pathPointsCoincide = true
     }
   }
-  this._drawRoiPaths(endPoint);
+  this._drawRoiPaths(endPoint)
 }
 
 function polygonAddPoint(
-  this: any,
+  this: CanvasRoi,
   points: Point[],
   point: Point,
   lineIndex: number
 ) {
-  points.splice(lineIndex + 1, 0, point);
+  points.splice(lineIndex + 1, 0, point)
   Object.assign(this.operateCursor, {
     pointIndex: lineIndex + 1,
     lineIndex: -1,
-  });
+  })
 }
 
-function modifyChosePath(this: any, e: MouseEvent) {
-  const newPoint = getMousePoint(e);
-  const { startPoint, pathIndex, pointIndex, lineIndex, inPath } =
-    this.operateCursor || {};
-  if (!this.paths[pathIndex]) return;
-  const { type, points } = this.paths[pathIndex];
+function modifyChosePath(this: CanvasRoi, e: MouseEvent) {
+  const newPoint = getMousePoint(e)
+  const {
+    startPoint: { x, y } = { x: 0, y: 0 },
+    pathIndex = -1,
+    pointIndex = -1,
+    lineIndex,
+    inPath,
+  } = this.operateCursor || {}
+  if (!this.paths[pathIndex]) return
+  const { type, points } = this.paths[pathIndex]
 
-  if (!inPath && type === "circle") {
-    points[1] = newPoint;
-    this._drawRoiPathsWithOpe(newPoint);
-    return;
+  if (!inPath && type === 'circle') {
+    points[1] = newPoint
+    this._drawRoiPathsWithOpe(newPoint)
+    return
   }
-  const distance = [newPoint.x - startPoint.x, newPoint.y - startPoint.y];
-  this.operateCursor.startPoint = newPoint;
-  const isRect = type === "rect";
+  const distance = [newPoint.x - x, newPoint.y - y]
+  this.operateCursor && (this.operateCursor.startPoint = newPoint)
+  const isRect = type === 'rect'
   const pointMove = (point: Point, xStatic?: boolean, yStatic?: boolean) => {
-    !xStatic && (point.x += distance[0]);
-    !yStatic && (point.y += distance[1]);
-  };
+    !xStatic && (point.x += distance[0])
+    !yStatic && (point.y += distance[1])
+  }
 
   if (inPath) {
-    points.forEach((point: Point) => pointMove(point));
-    this._drawRoiPaths();
-    return;
+    points.forEach((point: Point) => pointMove(point))
+    this._drawRoiPaths()
+    return
   }
 
   if (pointIndex >= 0) {
     const rectPointsMove = (idx: number) => {
       if (idx === 1) {
-        points[0].y += distance[1];
-        points[1].x += distance[0];
+        points[0].y += distance[1]
+        points[1].x += distance[0]
       } else if (idx === 3) {
-        points[0].x += distance[0];
-        points[1].y += distance[1];
+        points[0].x += distance[0]
+        points[1].y += distance[1]
       } else {
-        pointMove(points[idx / 2]);
+        pointMove(points[idx / 2])
       }
-    };
-    isRect ? rectPointsMove(pointIndex) : pointMove(points[pointIndex]);
-    this._drawRoiPathsWithOpe(!isRect && newPoint);
-    return;
+    }
+    isRect ? rectPointsMove(pointIndex) : pointMove(points[pointIndex])
+    this._drawRoiPathsWithOpe(isRect ? undefined : newPoint)
+    return
   }
 
-  if (lineIndex >= 0) {
+  if (lineIndex && lineIndex >= 0) {
     isRect
       ? lineIndex % 3 === 0
         ? pointMove(points[0], lineIndex === 0, lineIndex === 3)
         : pointMove(points[1], lineIndex === 2, lineIndex === 1)
-      : polygonAddPoint.call(this, points, newPoint, lineIndex);
-    this._drawRoiPathsWithOpe(!isRect && newPoint);
+      : polygonAddPoint.call(this, points, newPoint, lineIndex)
+    this._drawRoiPathsWithOpe(isRect ? undefined : newPoint)
   }
 }
 
-function checkPointLocalInPath(this: any, points: Point[], ckPoint: Point) {
-  const { length } = points;
+function checkPointLocalInPath(
+  this: CanvasRoi,
+  points: Point[],
+  ckPoint: Point
+) {
+  if (!this.$ctx) return
+  const { length } = points
   const {
     canvasScale,
     sensitive: { point },
-  } = this.$opts;
+  } = this.$opts
   for (let i = 0; i < length; i += 1) {
-    const start = points[i];
-    const end = points[(i + 1) % length];
-    const pointSen = point * canvasScale;
+    const start = points[i]
+    const end = points[(i + 1) % length]
+    const pointSen = point * canvasScale
     const nearCorer = checkPointsNearly.call(this, start, ckPoint, pointSen)
       ? i
       : checkPointsNearly.call(this, end, ckPoint, pointSen)
       ? i + 1
-      : -1;
+      : -1
     if (nearCorer > -1) {
-      return { pointIndex: nearCorer };
+      return { pointIndex: nearCorer }
     }
-    this.$ctx.beginPath();
-    this.$ctx.moveTo(start.x, start.y);
-    this.$ctx.lineTo(end.x, end.y);
-    this.$ctx.closePath();
+    this.$ctx.beginPath()
+    this.$ctx.moveTo(start.x, start.y)
+    this.$ctx.lineTo(end.x, end.y)
+    this.$ctx.closePath()
     if (this.$ctx.isPointInStroke(ckPoint.x, ckPoint.y)) {
-      return { lineIndex: i };
+      return { lineIndex: i }
     }
   }
-  return null;
+  return
 }
 
 function getMousePosition(
-  this: any,
+  this: CanvasRoi,
   path: RoiPath,
   point: Point,
   idx?: number,
   checkInPath?: boolean
 ) {
-  const { type, points } = path;
+  if (!this.$ctx) return
+  const { type, points } = path
   const {
     canvasScale,
     sensitive: { line },
     pathCanMove,
-  } = this.$opts;
-  this.$ctx.save();
-  this.$ctx.lineWidth = line * canvasScale;
-  let result = false;
+  } = this.$opts
+  this.$ctx.save()
+  this.$ctx.lineWidth = line * canvasScale
+  let result = false
 
-  if (type === "rect" || type === "polygon") {
-    const checkPoints = type === "rect" ? getVirtualRectPoints(points) : points;
-    const info = checkPointLocalInPath.call(this, checkPoints, point);
+  if (type === 'rect' || type === 'polygon') {
+    const checkPoints = type === 'rect' ? getVirtualRectPoints(points) : points
+    const info = checkPointLocalInPath.call(this, checkPoints, point)
     info &&
       (result = true) &&
-      (this.operateCursor = { pathType: type, pathIndex: idx, ...info });
-  } else if (type === "circle") {
-    this._createCvsPath(type, points);
-    result = this.$ctx.isPointInStroke(point.x, point.y);
-    result && (this.operateCursor = { pathType: "circle", pathIndex: idx });
+      (this.operateCursor = { pathType: type, pathIndex: idx, ...info })
+  } else if (type === 'circle') {
+    this._createCvsPath(type, points)
+    result = this.$ctx.isPointInStroke(point.x, point.y)
+    result && (this.operateCursor = { pathType: 'circle', pathIndex: idx })
   }
   if (pathCanMove && checkInPath) {
-    this._createCvsPath(type, points);
-    const checkFn = type === "line" ? "isPointInStroke" : "isPointInPath";
-    result = this.$ctx[checkFn](point.x, point.y);
+    this._createCvsPath(type, points)
+    const checkFn = type === 'line' ? 'isPointInStroke' : 'isPointInPath'
+    result = this.$ctx[checkFn](point.x, point.y)
     result &&
-      (this.operateCursor = { pathType: type, pathIndex: idx, inPath: true });
+      (this.operateCursor = { pathType: type, pathIndex: idx, inPath: true })
   }
-  this.$ctx.restore();
-  return result;
+  this.$ctx.restore()
+  return result
 }
 
-function checkMouseCanOperate(this: any, e?: MouseEvent): void {
-  const point = e ? getMousePoint(e) : undefined;
-  if (!point) return;
-  this.operateCursor = null;
-  this.$cvs.style.cursor = "inherit";
+function checkMouseCanOperate(this: CanvasRoi, e?: MouseEvent): void {
+  if (!this.$cvs) return
+  const point = e ? getMousePoint(e) : undefined
+  if (!point) return
+  this.operateCursor = null
+  this.$cvs.style.cursor = 'inherit'
   const {
     paths,
     choseIndex,
     $opts: { operateFocusOnly },
-  } = this;
+  } = this
   if (operateFocusOnly) {
     if (paths[choseIndex]) {
-      getMousePosition.call(this, paths[choseIndex], point, choseIndex);
+      getMousePosition.call(this, paths[choseIndex], point, choseIndex)
       !this.operateCursor &&
-        getMousePosition.call(this, paths[choseIndex], point, choseIndex, true);
+        getMousePosition.call(this, paths[choseIndex], point, choseIndex, true)
     }
   } else {
     this.paths.some((path: RoiPath, idx: number) =>
       getMousePosition.call(this, path, point, idx)
-    );
+    )
     !this.operateCursor &&
       this.paths.some((path: RoiPath, idx: number) =>
         getMousePosition.call(this, path, point, idx, true)
-      );
+      )
   }
-  let drawOpeCircle = false;
+  let drawOpeCircle = false
   if (this.operateCursor) {
     const {
       pathType,
@@ -245,25 +258,25 @@ function checkMouseCanOperate(this: any, e?: MouseEvent): void {
       pointIndex,
       inPath,
       pathIndex,
-    } = this.operateCursor;
-    if (!inPath && pathType === "rect") {
-      const { side, corner } = this.$opts.rectCursors;
+    } = this.operateCursor
+    if (!inPath && pathType === 'rect') {
+      const { side, corner } = this.$opts.rectCursors
       this.$cvs.style.cursor =
-        pointIndex > -1 ? corner[pointIndex] : side[lineIndex];
+        pointIndex > -1 ? corner[pointIndex] : side[lineIndex]
     } else if (inPath) {
-      pathIndex === choseIndex && (this.$cvs.style.cursor = "move");
+      pathIndex === choseIndex && (this.$cvs.style.cursor = 'move')
     } else {
-      drawOpeCircle = true;
+      drawOpeCircle = true
     }
   }
-  this._drawRoiPathsWithOpe(drawOpeCircle && point);
+  this._drawRoiPathsWithOpe(drawOpeCircle ? point : undefined)
 }
 
-function cvsMouseMove(this: any, e: MouseEvent): void {
-  const { drawing, needDrag, dragging, modifying, lastMoveEvent } = this;
+function cvsMouseMove(this: CanvasRoi, e: MouseEvent): void {
+  const { drawing, needDrag, dragging, modifying, lastMoveEvent } = this
   if (((drawing && needDrag && dragging) || modifying) && e.buttons !== 1) {
-    this.cvsMouseUp(lastMoveEvent);
-    return;
+    this._cvsMouseUp(lastMoveEvent as MouseEvent)
+    return
   }
   drawing
     ? needDrag
@@ -271,100 +284,101 @@ function cvsMouseMove(this: any, e: MouseEvent): void {
       : clickDrawingHandle.call(this, e)
     : modifying
     ? modifyChosePath.call(this, e)
-    : checkMouseCanOperate.call(this, e);
-  this.lastMoveEvent = e;
+    : checkMouseCanOperate.call(this, e)
+  this.lastMoveEvent = e
 }
 
-function drawingPoint(this: any, e: MouseEvent) {
+function drawingPoint(this: CanvasRoi, e: MouseEvent) {
   if (!this.drawing) {
-    const point = getMousePoint(e);
-    this._createNewPath(point, "point", false);
-    this._addNewPath();
+    const point = getMousePoint(e)
+    this._createNewPath(point, 'point', false)
+    this._addNewPath()
   }
 }
 
-function drawingLine(this: any, e: MouseEvent) {
+function drawingLine(this: CanvasRoi, e: MouseEvent) {
   if (!this.drawing) {
-    const startPoint = getMousePoint(e);
-    this._createNewPath(startPoint, "line", false);
+    const startPoint = getMousePoint(e)
+    this._createNewPath(startPoint, 'line', false)
   } else {
-    const newPoint = getMousePoint(e);
-    this.newPath.points.push(newPoint);
-    this._addNewPath();
+    const newPoint = getMousePoint(e)
+    this.newPath.points.push(newPoint)
+    this._addNewPath()
   }
 }
 
-function drawingPolygon(this: any, e: MouseEvent) {
+function drawingPolygon(this: CanvasRoi, e: MouseEvent) {
   if (!this.drawing) {
-    const startPoint = getMousePoint(e);
-    this._createNewPath(startPoint, "polygon", false);
+    const startPoint = getMousePoint(e)
+    this._createNewPath(startPoint, 'polygon', false)
   } else if (this.pathPointsCoincide) {
-    this._addNewPath();
+    this._addNewPath()
   } else {
-    const newPoint = getMousePoint(e);
-    this.newPath.points.push(newPoint);
+    const newPoint = getMousePoint(e)
+    this.newPath.points.push(newPoint)
   }
 }
 
-function cvsMouseClick(this: any, e: MouseEvent): void {
-  e.preventDefault();
-  this.$cvs.focus();
-  const { drawing, needDrag, modifying } = this;
+function cvsMouseClick(this: CanvasRoi, e: MouseEvent): void {
+  e.preventDefault()
+  if (!this.$cvs) return
+  this.$cvs.focus()
+  const { drawing, needDrag, modifying } = this
   if (
     this._isPathMax() ||
     !this._isSingleTypeAllow() ||
     (drawing && needDrag) ||
     modifying
   )
-    return;
-  const pos = getMousePoint(e);
-  if (e.type === "contextmenu") {
+    return
+  const pos = getMousePoint(e)
+  if (e.type === 'contextmenu') {
     drawing &&
-      (this.newPath.type === "polygon"
+      (this.newPath.type === 'polygon'
         ? this.newPath.points.pop()
-        : this._resetNewPath());
+        : this._resetNewPath())
   } else {
-    const { singleType, allowTypes } = this.$opts;
+    const { singleType, allowTypes } = this.$opts
     if (
       singleType &&
-      clickPathTypes.includes(this.curSingleType) &&
-      allowTypes.includes(this.curSingleType)
+      (clickPathTypes as string[]).includes(this.curSingleType) &&
+      (allowTypes as string[]).includes(this.curSingleType)
     ) {
       switch (this.curSingleType) {
-        case "polygon":
-          drawingPolygon.call(this, e);
-          break;
-        case "point":
-          drawingPoint.call(this, e);
-          break;
-        case "line":
-          drawingLine.call(this, e);
-          break;
+        case 'polygon':
+          drawingPolygon.call(this, e)
+          break
+        case 'point':
+          drawingPoint.call(this, e)
+          break
+        case 'line':
+          drawingLine.call(this, e)
+          break
         default:
-          break;
+          break
       }
-    } else if (!singleType && e.shiftKey && allowTypes.includes("polygon")) {
-      this.drawingPolygon(e);
+    } else if (!singleType && e.shiftKey && allowTypes.includes('polygon')) {
+      drawingPolygon.call(this, e)
     }
   }
-  this._drawRoiPaths(pos);
+  this._drawRoiPaths(pos)
 }
 
-function cvsMouseDown(this: any, e: MouseEvent): void {
-  e.preventDefault();
+function cvsMouseDown(this: CanvasRoi, e: MouseEvent): void {
+  e.preventDefault()
 
-  if (e.buttons >= 2) return;
+  if (e.buttons >= 2) return
 
   if (
     this.operateCursor &&
     (!this.operateCursor.inPath ||
       this.operateCursor.pathIndex === this.choseIndex)
   ) {
-    this.modifying = true;
-    this._emitEvent("modify-start", e);
-    this.operateCursor.originStartPoint = getMousePoint(e);
-    this.operateCursor.startPoint = getMousePoint(e);
-    return;
+    this.modifying = true
+    this._emitEvent('onModifyStart', e)
+    this.operateCursor.originStartPoint = getMousePoint(e)
+    this.operateCursor.startPoint = getMousePoint(e)
+    return
   }
 
   if (
@@ -372,79 +386,82 @@ function cvsMouseDown(this: any, e: MouseEvent): void {
     !this._isSingleTypeAllow(true) ||
     (!this.$opts.singleType && e.shiftKey)
   )
-    return;
-  const type = this.curSingleType || (e.ctrlKey ? "circle" : "rect");
-  if (!this.$opts.allowTypes.includes(type)) return;
-  const startPoint = getMousePoint(e);
-  this._createNewPath(startPoint, type);
-  this._drawRoiPaths();
+    return
+  const type = this.curSingleType || (e.ctrlKey ? 'circle' : 'rect')
+  if (!this.$opts.allowTypes.includes(type)) return
+  const startPoint = getMousePoint(e)
+  this._createNewPath(startPoint, type)
+  this._drawRoiPaths()
 }
 
-function addDragPath(this: any, endPoint: Point) {
-  const { type, points } = this.newPath;
-  const startPoint = points[0];
-  if (type === "rect") {
-    this.newPath.points = fixRectPoints(startPoint, endPoint);
-  } else if (type === "circle") {
-    points.push(endPoint);
+function addDragPath(this: CanvasRoi, endPoint: Point) {
+  const { type, points } = this.newPath
+  const startPoint = points[0]
+  if (type === 'rect') {
+    this.newPath.points = fixRectPoints(startPoint, endPoint)
+  } else if (type === 'circle') {
+    points.push(endPoint)
   }
-  this._addNewPath();
+  this._addNewPath()
 }
 
-function checkRoiValid(this: any, startPoint: Point, endPoint: Point) {
-  const { tinyRectSize, tinyCircleRadius, canvasScale: cs } = this.$opts;
-  const { type } = this.newPath;
-  const tinyValue = type === "rect" ? tinyRectSize : tinyCircleRadius;
+function checkRoiValid(this: CanvasRoi, startPoint: Point, endPoint: Point) {
+  const { tinyRectSize, tinyCircleRadius, canvasScale: cs } = this.$opts
+  const { type } = this.newPath
+  const tinyValue = type === 'rect' ? tinyRectSize : tinyCircleRadius
   return tinyValue > 0
-    ? type === "rect"
+    ? type === 'rect'
       ? Math.abs(startPoint.x - endPoint.x) > tinyValue * cs &&
         Math.abs(startPoint.y - endPoint.y) > tinyValue * cs
       : countDistance(startPoint, endPoint) > tinyValue * cs
-    : !checkPointsEqual(startPoint, endPoint);
+    : !checkPointsEqual(startPoint, endPoint)
 }
 
-function checkMouseInPaths(this: any, pos: Point) {
-  this.$ctx.save();
+function checkMouseInPaths(this: CanvasRoi, pos: Point) {
+  if (!this.$ctx) return -1
+  this.$ctx.save()
   const index = this.paths.findIndex((path: RoiPath) => {
-    this._createCvsPath(path.type, path.points);
-    const checkFn = path.type === "line" ? "isPointInStroke" : "isPointInPath";
-    return this.$ctx[checkFn](pos.x, pos.y);
-  });
-  this.$ctx.restore();
-  return index;
+    this._createCvsPath(path.type, path.points)
+    const checkFn = path.type === 'line' ? 'isPointInStroke' : 'isPointInPath'
+    return this.$ctx![checkFn](pos.x, pos.y)
+  })
+  this.$ctx.restore()
+  return index
 }
 
-function checkPathFocus(this: any, point: Point) {
-  const choseIndex = checkMouseInPaths.call(this, point);
+function checkPathFocus(this: CanvasRoi, point: Point) {
+  const choseIndex = checkMouseInPaths.call(this, point)
   !(this.$opts.ignoreInvalidSelect && choseIndex === -1) &&
-    this.choosePath(choseIndex);
+    this.choosePath(choseIndex)
 }
 
-function cvsMouseUp(this: any, e: MouseEvent): void {
-  const endPoint = getMousePoint(e);
+function cvsMouseUp(this: CanvasRoi, e: MouseEvent): void {
+  const endPoint = getMousePoint(e)
   if (this.drawing && this.needDrag && this.dragging) {
     checkRoiValid.call(this, this.newPath.points[0], endPoint)
       ? addDragPath.call(
           this,
-          this.newPath.type === "rect"
+          this.newPath.type === 'rect'
             ? getRectEndPoint.call(this, endPoint)
             : endPoint
         )
-      : this._resetNewPath();
-    return;
+      : this._resetNewPath()
+    return
   }
   if (this.modifying) {
-    this.modifying = false;
-    !checkPointsEqual(this.operateCursor.originStartPoint, endPoint) &&
-      this._emitValue("modify", this.choseIndex);
+    this.modifying = false
+    const { originStartPoint = {} as Point } = this
+      .operateCursor as OperateCursor
+    !checkPointsEqual(originStartPoint, endPoint) &&
+      this._emitValue('modify', this.choseIndex)
   } else if (this.$opts.readonly) {
-    checkPathFocus.call(this, endPoint);
-    this._drawRoiPaths();
+    checkPathFocus.call(this, endPoint)
+    this._drawRoiPaths()
   } else if (!e.shiftKey && (!this.$opts.singleType || !this.curSingleType)) {
-    this._resetNewPath();
+    this._resetNewPath()
 
-    checkPathFocus.call(this, endPoint);
-    checkMouseCanOperate.call(this, e);
+    checkPathFocus.call(this, endPoint)
+    checkMouseCanOperate.call(this, e)
   }
 }
 
@@ -455,4 +472,4 @@ export default {
   cvsMouseMove,
   cvsMouseClick,
   checkMouseCanOperate,
-};
+}
