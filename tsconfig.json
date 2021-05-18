@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "outDir": "dist",
     "declaration": true,
-    "declarationDir": "types",
-    "emitDeclarationOnly": true,
+    "noEmit": true,
 
     "target": "esnext",
     "module": "esnext",
@@ -16,7 +16,7 @@
     "esModuleInterop": true,
     "noImplicitThis": true,
     "lib": ["esnext", "dom"],
-    "types": ["jest", "node"]
+    "types": ["jest", "node", "react"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "src/react-roi.ts"],
 }
