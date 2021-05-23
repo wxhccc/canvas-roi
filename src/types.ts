@@ -57,7 +57,7 @@ export type PublicMethodNames =
 export interface RoiPath {
   type: PathTypes
   points: Point[]
-  styles: CanvasRenderingContext2D
+  styles?: CanvasRenderingContext2D
   inner: boolean
   center?: Point
   radius?: number

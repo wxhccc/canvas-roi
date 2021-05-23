@@ -7,15 +7,15 @@ export function defaultOptions(): RoiOptions {
     globalStyles: {
       lineWidth: 2,
       strokeStyle: 'rgba(14, 126, 226, 1)',
-      fillStyle: 'rgba(14, 126, 226, 0.6)',
+      fillStyle: 'rgba(14, 126, 226, 0.6)'
     },
     focusStyles: undefined,
     operateFocusOnly: true,
     operateCircle: {
       styles: {
-        fillStyle: 'rgba(255, 255, 255, 0.9)',
+        fillStyle: 'rgba(255, 255, 255, 0.9)'
       },
-      radius: 4,
+      radius: 4
     },
     sensitive: { line: 4, point: 3 },
     allowTypes: ['point', 'line', 'circle', 'rect', 'polygon'],
@@ -31,10 +31,10 @@ export function defaultOptions(): RoiOptions {
     ignoreInvalidSelect: false,
     rectCursors: {
       side: ['ns-resize', 'ew-resize', 'ns-resize', 'ew-resize'],
-      corner: ['nw-resize', 'ne-resize', 'se-resize', 'sw-resize'],
+      corner: ['nw-resize', 'ne-resize', 'se-resize', 'sw-resize']
     },
     maxPath: 0,
     initChoseIndex: -1,
-    autoFit: false,
+    autoFit: false
   }
 }

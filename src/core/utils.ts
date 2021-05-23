@@ -9,7 +9,7 @@ export function fixRectPoints(start: Point, end: Point): Point[] {
   const [width, height] = [Math.abs(start.x - end.x), Math.abs(start.y - end.y)]
   return [
     { x: center.x - width / 2, y: center.y - height / 2 },
-    { x: center.x + width / 2, y: center.y + height / 2 },
+    { x: center.x + width / 2, y: center.y + height / 2 }
   ]
 }
 
@@ -19,7 +19,7 @@ export function getVirtualRectPoints(points: Point[]): Point[] {
         points[0],
         { x: points[1].x, y: points[0].y },
         points[1],
-        { x: points[0].x, y: points[1].y },
+        { x: points[0].x, y: points[1].y }
       ]
     : points
 }

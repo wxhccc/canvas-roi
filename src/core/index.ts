@@ -3,7 +3,7 @@ import {
   publicMethods,
   eventNames,
   clickPathTypes,
-  dragPathTypes,
+  dragPathTypes
 } from './const'
 import { jsonClone, fixRectPoints, bindMethods, countDistance } from './utils'
 import { defaultOptions } from './options'
@@ -21,7 +21,7 @@ import {
   MethodsMap,
   OperateCursor,
   ElementOrSelector,
-  ParitalRoiOptions,
+  ParitalRoiOptions
 } from '../types'
 
 export { publicMethods, eventNames }
@@ -81,7 +81,7 @@ export default class CanvasRoi {
       mousedown: this._cvsMouseDown.bind(this),
       mousemove: this._cvsMouseMove.bind(this),
       mouseup: this._cvsMouseUp.bind(this),
-      contextmenu: this._cvsMouseClick.bind(this),
+      contextmenu: this._cvsMouseClick.bind(this)
     }
     elementOrSelector && this.mount(elementOrSelector)
   }
@@ -102,7 +102,7 @@ export default class CanvasRoi {
       pathPointsCoincide: false,
       hasInvertPath: false,
       choseIndex: -1,
-      resizeTicker: 0,
+      resizeTicker: 0
     })
   }
 
@@ -225,15 +225,14 @@ export default class CanvasRoi {
           points: fixedPoints,
           start: this.scale(fixedPoints[0]),
           width: this.scale({ x: fixedPoints[1].x - fixedPoints[0].x, y: 0 }).x,
-          height: this.scale({ x: 0, y: fixedPoints[1].y - fixedPoints[0].y })
-            .y,
+          height: this.scale({ x: 0, y: fixedPoints[1].y - fixedPoints[0].y }).y
         }
       } else if (type === 'circle') {
         const radius = countDistance(points[0], points[1])
         info = {
           center: this.scale(points[0]),
           radius,
-          scaleRadius: this.scale({ x: radius, y: 0 }).x,
+          scaleRadius: this.scale({ x: radius, y: 0 }).x
         }
       }
       Object.assign(path, info)
@@ -278,7 +277,7 @@ export default class CanvasRoi {
       needDrag: false,
       dragging: false,
       newPath: {},
-      pathPointsCoincide: false,
+      pathPointsCoincide: false
     })
   }
 
@@ -338,7 +337,6 @@ export default class CanvasRoi {
     this._mergeOptions(options)
 
     options.globalStyles && this._setCtxStyles()
-
     ;(options.width !== this.$opts.width ||
       options.height !== this.$opts.height) &&
       this.resetCanvas()
@@ -361,14 +359,14 @@ export default class CanvasRoi {
     this.$size = { width, height }
     this.$cvsSize = {
       width: width * canvasScale,
-      height: height * canvasScale,
+      height: height * canvasScale
     }
     Object.assign(this.$cvs, this.$cvsSize)
     this.$cvs &&
       Object.assign(this.$cvs.style, {
         width: `${canvasScale * 100}%`,
         height: `${canvasScale * 100}%`,
-        transform: `scale(${1 / canvasScale})`,
+        transform: `scale(${1 / canvasScale})`
       })
     this.setValue(this.value)
     this._setCtxStyles()
@@ -379,7 +377,7 @@ export default class CanvasRoi {
     const { width, height } = useSize && this.$size ? this.$size : this.$cvsSize
     return {
       x: this._floatToFixed(coords.x / width),
-      y: this._floatToFixed(coords.y / height),
+      y: this._floatToFixed(coords.y / height)
     }
   }
 
@@ -387,7 +385,7 @@ export default class CanvasRoi {
     const { width, height } = useSize && this.$size ? this.$size : this.$cvsSize
     return {
       x: Math.round(scaleCoords.x * width),
-      y: Math.round(scaleCoords.y * height),
+      y: Math.round(scaleCoords.y * height)
     }
   }
 

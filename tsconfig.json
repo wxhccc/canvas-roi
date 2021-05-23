@@ -3,21 +3,20 @@
     "baseUrl": ".",
     "outDir": "dist",
     "declaration": true,
-    "declarationDir": "types",
     "noEmit": true,
 
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
     "strict": true,
-    "jsx": "react",
+    "jsx": "preserve",
     "importHelpers": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noImplicitThis": true,
     "lib": ["esnext", "dom"],
-    "types": ["jest", "node", "react"]
+    "types": ["jest", "node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "src/react-roi.ts"],
+  "include": ["src/**/*.ts"],
 }

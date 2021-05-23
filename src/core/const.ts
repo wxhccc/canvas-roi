@@ -2,7 +2,7 @@ import {
   ROIEvents,
   ClickPathTypes,
   DragPathTypes,
-  PublicMethodNames,
+  PublicMethodNames
 } from '../types'
 
 export const publicMethods: PublicMethodNames[] = [
@@ -17,7 +17,7 @@ export const publicMethods: PublicMethodNames[] = [
   'exportImageFromCanvas',
   'customDrawing',
   'choosePath',
-  'destroy',
+  'destroy'
 ]
 
 export const eventNames: ROIEvents[] = [
@@ -28,7 +28,7 @@ export const eventNames: ROIEvents[] = [
   'onResize',
   'onDrawStart',
   'onDrawEnd',
-  'onModifyStart',
+  'onModifyStart'
 ]
 
 export const clickPathTypes: ClickPathTypes[] = ['point', 'line', 'polygon']
