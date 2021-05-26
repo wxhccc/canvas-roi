@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
+    "outDir": "dist",
     "declaration": true,
-    "declarationDir": "types",
-    "emitDeclarationOnly": true,
+    "noEmit": true,
 
     "target": "esnext",
     "module": "esnext",
@@ -18,5 +18,5 @@
     "lib": ["esnext", "dom"],
     "types": ["jest", "node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts"],
 }

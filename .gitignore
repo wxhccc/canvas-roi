@@ -1,5 +1,7 @@
 .DS_Store
 node_modules/
+dist/
+types/
 
 # Editor directories and files
 .idea

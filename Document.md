@@ -44,7 +44,7 @@ CDN:
 ### 用法
 
 ```js
-import { CanvasRoi } from '@wxhccc/canvas-roi';
+import CanvasRoi from '@wxhccc/canvas-roi';
 
 new CanvasRoi(element[, options]);
 
@@ -520,7 +520,7 @@ canvas画布的上下文，可用于自定义绘制逻辑。
 </template>
 <script>
 ...
-import CanvasRoi from 'canvas-roi';
+import CanvasRoi from '@wxhccc/canvas-roi/dist/vue-roi';
 
 ...
 components: {
@@ -564,6 +564,20 @@ data: {
 
 添加默认插槽，可用于在画布上添加额外的控制模块dom.
 
+## React组件
+
+组件默认导出一个封装好的React组件.
+
+用法如下：
+
+```
+
+import CanvasRoi from '@wxhccc/canvas-roi/dist/react-roi';
+
+...
+
+<CanvasRoi value={paths} onInput={val => path = val} />
+```
 
 ## License
 
