@@ -361,13 +361,14 @@ export default class CanvasRoi {
       width: width * canvasScale,
       height: height * canvasScale
     }
-    Object.assign(this.$cvs, this.$cvsSize)
-    this.$cvs &&
+    if (this.$cvs) {
+      Object.assign(this.$cvs, this.$cvsSize)
       Object.assign(this.$cvs.style, {
         width: `${canvasScale * 100}%`,
         height: `${canvasScale * 100}%`,
         transform: `scale(${1 / canvasScale})`
       })
+    }
     this.setValue(this.value)
     this._setCtxStyles()
     this._drawRoiPaths()
