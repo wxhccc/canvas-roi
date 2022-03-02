@@ -16,7 +16,7 @@
     "esModuleInterop": true,
     "noImplicitThis": true,
     "lib": ["esnext", "dom"],
-    "types": ["jest", "node", "react"]
+    "types": ["jest", "node"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "src/react-roi.ts"],
+  "include": ["src/**/*.ts"],
 }
