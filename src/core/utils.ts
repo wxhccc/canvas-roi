@@ -38,6 +38,6 @@ export function getMousePoint(e: MouseEvent): Point {
 
 export function bindMethods(this: any, methods: MethodsMap): void {
   for (const key in methods) {
-    this[`_${key}`] = methods[key]
+    this[`_${key}`] = methods[key].bind(this)
   }
 }

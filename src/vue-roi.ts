@@ -5,7 +5,8 @@ import {
   RoiPath,
   ROIEvents,
   ParitalRoiOptions,
-  PublicMethodNames
+  PublicMethodNames,
+  CustomHanlder
 } from './types'
 
 export type VueROIEvent =
@@ -74,7 +75,8 @@ const optionProps = () => ({
     type: Boolean,
     default: undefined
   },
-  noInlineStyle: Boolean
+  noInlineStyle: Boolean,
+  choseIndex: Number
 })
 
 const CanvasRoiComponent = defineComponent({
@@ -96,7 +98,7 @@ const CanvasRoiComponent = defineComponent({
     const roi = ref<CanvasRoi>()
 
     const emitEvent = (name: ROIEvents, ...args: any[]) => {
-      const cusHandler = props.options[name]
+      const cusHandler = props.options[name] as CustomHanlder
       cusHandler instanceof Function && cusHandler(...args)
       const vueEventName =
         name === 'onInput' ? 'update:modelValue' : vueEventMap[name]
@@ -107,7 +109,7 @@ const CanvasRoiComponent = defineComponent({
       eventNames.reduce((acc, name) => {
         acc[name] = emitEvent.bind(undefined, name)
         return acc
-      }, {} as Record<ROIEvents, (name: ROIEvents, ...args: any[]) => void>)
+      }, {} as ParitalRoiOptions)
     )
 
     const rootProps = computed(() => ({
@@ -138,13 +140,15 @@ const CanvasRoiComponent = defineComponent({
   },
   computed: {
     handledOptions(): ParitalRoiOptions {
-      const { options, modelValue, ...propOptions } = this.$props
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { options, modelValue, choseIndex, ...propOptions } = this.$props
       return { ...propOptions, ...options, ...this.handledEvents }
     }
   },
   watch: {
     modelValue: 'updateValue',
-    handledOptions: 'resetVueOptions'
+    handledOptions: 'resetVueOptions',
+    choseIndex: 'updateChoseIndex'
   },
   methods: {
     callInstanceMethod<M extends PublicMethodNames>(
@@ -160,6 +164,9 @@ const CanvasRoiComponent = defineComponent({
     },
     resetVueOptions(value: RoiOptions) {
       this.callInstanceMethod('resetOptions', value)
+    },
+    updateChoseIndex(index: number) {
+      this.callInstanceMethod('choosePath', index)
     }
   },
   render() {

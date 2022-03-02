@@ -1,10 +1,19 @@
 import React, { useRef, useEffect, useImperativeHandle } from 'react'
 import CanvasRoi, { publicMethods, style } from './index'
-import { RoiPath, PublicMethodNames, ParitalRoiOptions } from './types'
+import {
+  RoiPath,
+  PublicMethodNames,
+  ParitalRoiOptions,
+  PowerPartial,
+  RoiOptions
+} from './types'
 
 export interface RoiProps extends ParitalRoiOptions {
   value?: RoiPath[]
   children?: React.ReactNode
+  /** 当前选中的选区索引 */
+  choseIndex?: number
+  /** 是否不添加行内样式，方便进行样式覆盖 */
   noInlineStyle?: boolean
 }
 
@@ -18,6 +27,8 @@ const CanvasRoiComponent = React.forwardRef<
   const $_instanceId = useRef(+new Date() + Math.random())
   const $roi = useRef<CanvasRoi>()
   const lastValue = useRef<undefined | RoiPath[]>(props.value)
+  const lastOptions = useRef<PowerPartial<RoiOptions>>({})
+  const { value, choseIndex, children, noInlineStyle, ...roiOptions } = props
 
   useEffect(() => {
     if ($el.current) {
@@ -32,13 +43,26 @@ const CanvasRoiComponent = React.forwardRef<
   // update options and value
   useEffect(() => {
     if (!$roi.current) return
-    if (lastValue.current === props.value) {
-      $roi.current.resetOptions(props)
-    } else if (props.value) {
-      $roi.current.setValue(props.value)
-      lastValue.current = props.value
+    if (value && lastValue.current !== value) {
+      $roi.current.setValue(value)
+      lastValue.current = value
     }
-  }, [props])
+    if (
+      Object.keys(roiOptions).some(
+        (key) =>
+          roiOptions[key as keyof RoiOptions] !==
+          lastOptions.current[key as keyof RoiOptions]
+      )
+    ) {
+      lastOptions.current = roiOptions
+      $roi.current.resetOptions(roiOptions)
+    }
+  }, [value, roiOptions])
+
+  useEffect(() => {
+    if (!$roi.current || choseIndex === undefined) return
+    $roi.current.choosePath(choseIndex)
+  }, [choseIndex])
 
   const getProxyMethod = () => {
     const proxyMethods = {} as RefMethod
@@ -58,7 +82,7 @@ const CanvasRoiComponent = React.forwardRef<
   return React.createElement('div', {
     className: 'canvas-roi',
     'data-id': $_instanceId,
-    ...(props.noInlineStyle ? {} : { style }),
+    ...(noInlineStyle ? {} : { style }),
     ref: $el
   })
 })

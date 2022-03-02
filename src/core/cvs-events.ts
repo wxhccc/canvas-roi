@@ -1,12 +1,12 @@
 import type CanvasRoi from './'
-import { OperateCursor, Point, RoiPath } from '../types'
+import { DistanceCheck, OperateCursor, Point, RoiPath } from '../types'
 import { clickPathTypes } from './const'
 import {
   getMousePoint,
   checkPointsEqual,
   getVirtualRectPoints,
   countDistance,
-  fixRectPoints,
+  fixRectPoints
 } from './utils'
 
 function keyPress(this: CanvasRoi, e: KeyboardEvent): void {
@@ -44,17 +44,11 @@ function dragDrawingHandle(this: CanvasRoi, e: MouseEvent) {
   )
 }
 
-type CusDistanceCheck =
-  | {
-      (oPoint: Point, dPoint: Point): boolean
-    }
-  | number
-
 function checkPointsNearly(
   this: CanvasRoi,
   oPoint: Point,
   dPoint: Point,
-  cusDistanceCheck?: CusDistanceCheck
+  cusDistanceCheck?: DistanceCheck
 ): boolean {
   const { distanceCheck, canvasScale } = this.$opts
   const checkValue = cusDistanceCheck || distanceCheck
@@ -88,7 +82,7 @@ function polygonAddPoint(
   points.splice(lineIndex + 1, 0, point)
   Object.assign(this.operateCursor, {
     pointIndex: lineIndex + 1,
-    lineIndex: -1,
+    lineIndex: -1
   })
 }
 
@@ -99,7 +93,7 @@ function modifyChosePath(this: CanvasRoi, e: MouseEvent) {
     pathIndex = -1,
     pointIndex = -1,
     lineIndex,
-    inPath,
+    inPath
   } = this.operateCursor || {}
   if (!this.paths[pathIndex]) return
   const { type, points } = this.paths[pathIndex]
@@ -159,7 +153,7 @@ function checkPointLocalInPath(
   const { length } = points
   const {
     canvasScale,
-    sensitive: { point },
+    sensitive: { point }
   } = this.$opts
   for (let i = 0; i < length; i += 1) {
     const start = points[i]
@@ -196,7 +190,7 @@ function getMousePosition(
   const {
     canvasScale,
     sensitive: { line },
-    pathCanMove,
+    pathCanMove
   } = this.$opts
   this.$ctx.save()
   this.$ctx.lineWidth = line * canvasScale
@@ -233,7 +227,7 @@ function checkMouseCanOperate(this: CanvasRoi, e?: MouseEvent): void {
   const {
     paths,
     choseIndex,
-    $opts: { operateFocusOnly },
+    $opts: { operateFocusOnly }
   } = this
   if (operateFocusOnly) {
     if (paths[choseIndex]) {
@@ -257,7 +251,7 @@ function checkMouseCanOperate(this: CanvasRoi, e?: MouseEvent): void {
       lineIndex,
       pointIndex,
       inPath,
-      pathIndex,
+      pathIndex
     } = this.operateCursor
     if (!inPath && pathType === 'rect') {
       const { side, corner } = this.$opts.rectCursors
@@ -421,9 +415,10 @@ function checkMouseInPaths(this: CanvasRoi, pos: Point) {
   if (!this.$ctx) return -1
   this.$ctx.save()
   const index = this.paths.findIndex((path: RoiPath) => {
+    if (!this.$ctx) return
     this._createCvsPath(path.type, path.points)
     const checkFn = path.type === 'line' ? 'isPointInStroke' : 'isPointInPath'
-    return this.$ctx![checkFn](pos.x, pos.y)
+    return this.$ctx[checkFn](pos.x, pos.y)
   })
   this.$ctx.restore()
   return index
@@ -471,5 +466,5 @@ export default {
   cvsMouseDown,
   cvsMouseMove,
   cvsMouseClick,
-  checkMouseCanOperate,
+  checkMouseCanOperate
 }

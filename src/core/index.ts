@@ -21,7 +21,8 @@ import {
   MethodsMap,
   OperateCursor,
   ElementOrSelector,
-  ParitalRoiOptions
+  ParitalRoiOptions,
+  PathChangeType
 } from '../types'
 
 export { publicMethods, eventNames }
@@ -53,11 +54,12 @@ export default class CanvasRoi {
   _cvsMouseMove!: typeof cvsEventHandlers.cvsMouseMove
   _cvsMouseClick!: typeof cvsEventHandlers.cvsMouseClick
   _checkMouseCanOperate!: typeof cvsEventHandlers.checkMouseCanOperate
-  _setCtxStyles!: typeof cvsContextMethods.setCtxStyles
-  _createCvsPath!: typeof cvsContextMethods.createCvsPath
-  _drawExistRoiPath!: typeof cvsContextMethods.drawExistRoiPath
-  _drawRoiPaths!: typeof cvsContextMethods.drawRoiPaths
-  _drawRoiPathsWithOpe!: typeof cvsContextMethods.drawRoiPathsWithOpe
+  _setCtxStyles: typeof cvsContextMethods.setCtxStyles = () => undefined
+  _createCvsPath: typeof cvsContextMethods.createCvsPath = () => undefined
+  _drawExistRoiPath: typeof cvsContextMethods.drawExistRoiPath = () => undefined
+  _drawRoiPaths: typeof cvsContextMethods.drawRoiPaths = () => undefined
+  _drawRoiPathsWithOpe: typeof cvsContextMethods.drawRoiPathsWithOpe = () =>
+    undefined
 
   public $el?: HTMLElement
   public $opts: RoiOptions
@@ -167,7 +169,7 @@ export default class CanvasRoi {
   }
 
   _emitEvent(name: ROIEvents, ...args: unknown[]): void {
-    const callback = this.$opts[name]
+    const callback = this.$opts[name] as CustomHanlder
     typeof callback === 'function' && callback.call(this, ...args)
   }
 
@@ -206,7 +208,7 @@ export default class CanvasRoi {
     return Math.round(value * times) / times
   }
 
-  _emitValue(changeType = 'add', index = 0): void {
+  _emitValue(changeType: PathChangeType = 'add', index = 0): void {
     const value = this.paths
 
     this._completePathsInfo(value)
@@ -294,9 +296,10 @@ export default class CanvasRoi {
 
   _addNewPath(): void {
     this._emitEvent('onDrawEnd')
-    this.paths.unshift(this.newPath)
+    const { reverse, singleType } = this.$opts
+    reverse ? this.paths.unshift(this.newPath) : this.paths.push(this.newPath)
     this._emitValue()
-    !this.$opts.singleType && this.choosePath(0)
+    !singleType && this.choosePath(reverse ? 0 : this.paths.length - 1)
     this._resetNewPath()
   }
 

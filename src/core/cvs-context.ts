@@ -6,7 +6,7 @@ function setCtxStyles(this: CanvasRoi): void {
   const { globalStyles, canvasScale } = this.$opts
   if (this.$ctx)
     Object.assign(this.$ctx, globalStyles, {
-      lineWidth: globalStyles.lineWidth * canvasScale,
+      lineWidth: globalStyles.lineWidth * canvasScale
     })
 }
 
@@ -149,7 +149,7 @@ function drawOpeDragPoint(this: CanvasRoi, point: Point) {
   this.$ctx.beginPath()
   const {
     operateCircle: { radius, styles },
-    canvasScale,
+    canvasScale
   } = this.$opts
   styles && Object.assign(this.$ctx, styles)
   this.$ctx.arc(point.x, point.y, radius * canvasScale, 0, 2 * Math.PI)
@@ -168,5 +168,5 @@ export default {
   createCvsPath,
   drawExistRoiPath,
   drawRoiPaths,
-  drawRoiPathsWithOpe,
+  drawRoiPathsWithOpe
 }
