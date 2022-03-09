@@ -24,6 +24,18 @@ export function getVirtualRectPoints(points: Point[]): Point[] {
     : points
 }
 
+/**
+ * 检查给定的坐标点是否是矩形
+ * @param points 坐标点
+ */
+export function checkPointsIsRect(points: Point[]) {
+  if (!Array.isArray(points) || points.length !== 4) {
+    return false
+  }
+  const [p1, p2, p3, p4] = points
+  return p1.x === p4.x && p1.y === p2.y && p3.x === p2.x && p3.y === p4.y
+}
+
 export function countDistance(point1: Point, point2: Point): number {
   return Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2)
 }

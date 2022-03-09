@@ -297,6 +297,25 @@ canvas画布的全局样式，支持所有canvas上下文`context`支持的样�
 
 是否自动适应容器尺寸。此特性使用了实验性API实现。如果浏览器环境不支持，建议通过监听导致容器尺寸变化得操作（resize，临近节点隐藏显示）来修改组件尺寸。
 
+### reverse
+
+`v2.1.1`
+
+- Type: `Boolean`
+- Default: `true`
+
+是否需要按后画在前的方式处理数据，默认是true
+
+
+### rectFullPoint
+
+`v2.2.0`
+
+- Type: `Boolean`
+- Default: `false`
+
+数据输出时矩形选区是否使用完整坐标点形式，默认矩形只需左上和右下两个点，设置为true时会有4个点
+
 
 ### ready
 

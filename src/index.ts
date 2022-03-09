@@ -1,5 +1,7 @@
 export { default as default } from './core'
 
+export { checkPointsIsRect } from './core/utils'
+
 export const style = {
   position: 'absolute',
   width: '100%',

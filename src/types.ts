@@ -136,6 +136,8 @@ export interface RoiOptions {
   height?: number
   /** 是否需要按后画在前的方式处理数据，默认是true */
   reverse: boolean
+  /** 矩形是否使用完整坐标点（4个）数据，默认否2个点 */
+  rectFullPoint?: boolean
   /** 组件初始化完成时出发 */
   onReady?: CustomHanlder
   /** 绑定选区数据发生变化时触发 */
