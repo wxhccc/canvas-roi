@@ -5,7 +5,13 @@ import {
   clickPathTypes,
   dragPathTypes
 } from './const'
-import { jsonClone, fixRectPoints, bindMethods, countDistance } from './utils'
+import {
+  jsonClone,
+  fixRectPoints,
+  bindMethods,
+  countDistance,
+  getVirtualRectPoints
+} from './utils'
 import { defaultOptions } from './options'
 import cvsEventHandlers from './cvs-events'
 import cvsContextMethods from './cvs-context'
@@ -131,6 +137,9 @@ export default class CanvasRoi {
   }
 
   _sizeChangeWatcher(): void {
+    if (!this.$cvs) {
+      return
+    }
     clearTimeout(this.resizeTicker)
     this.resizeTicker = window.setTimeout(() => {
       this._emitEvent('onResize')
@@ -243,12 +252,21 @@ export default class CanvasRoi {
 
   _switchCoordsScale(values: RoiPath[], toPx?: boolean): RoiPath[] {
     const newValue = jsonClone(values)
+    const { rectFullPoint } = this.$opts
     newValue.forEach((path) => {
-      const { points } = path
-      Array.isArray(points) &&
-        (path.points = points.map((point) =>
+      let { points } = path
+      if (Array.isArray(points)) {
+        if (path.type === 'rect') {
+          if (toPx && points.length === 4) {
+            points = [points[0], points[2]]
+          } else if (rectFullPoint && !toPx && points.length === 2) {
+            points = getVirtualRectPoints(points)
+          }
+        }
+        path.points = points.map((point) =>
           toPx ? this.invert(point) : this.scale(point)
-        ))
+        )
+      }
     })
     return newValue
   }
@@ -433,6 +451,9 @@ export default class CanvasRoi {
 
   destroy(): void {
     this._removeEventHandler()
+    if (this._ElObserver) {
+      this._autoFitChange(false)
+    }
     if (this.$el && this.$cvs) {
       this.$el.removeChild(this.$cvs)
       delete this.$ctx

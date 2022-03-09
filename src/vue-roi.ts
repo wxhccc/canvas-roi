@@ -76,7 +76,8 @@ const optionProps = () => ({
     default: undefined
   },
   noInlineStyle: Boolean,
-  choseIndex: Number
+  choseIndex: Number,
+  rectFullPoint: Boolean
 })
 
 const CanvasRoiComponent = defineComponent({

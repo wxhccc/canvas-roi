@@ -34,8 +34,8 @@ function createCvsPath(
       const truePoints = type === 'rect' ? getVirtualRectPoints(points) : points
       truePoints.forEach((point, idx) => {
         const { x, y } = point
-        idx === 0 ? this.$ctx!.moveTo(x, y) : this.$ctx!.lineTo(x, y)
-        stroke && type === 'polygon' && this.$ctx!.stroke()
+        idx === 0 ? this.$ctx?.moveTo(x, y) : this.$ctx?.lineTo(x, y)
+        stroke && type === 'polygon' && this.$ctx?.stroke()
       })
       break
     }
