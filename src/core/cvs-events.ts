@@ -32,15 +32,51 @@ function getRectEndPoint(this: CanvasRoi, truePoint: Point): Point {
     : truePoint
 }
 
+function getCircleEndPoint(this: CanvasRoi, truePoint: Point): Point {
+  const { bounded } = this.$opts
+  const [centerPoint] = this.newPath.points
+  if (!bounded || !checkCircleOutBounded.call(this, centerPoint, truePoint)) {
+    return truePoint
+  }
+  const radius = countDistance(centerPoint, truePoint)
+  const { x, y } = centerPoint
+  const { width, height } = this.$cvsSize
+  const trueX = x - radius < 0 ? 0 : x + radius > width ? width : x
+  const trueY = y - radius < 0 ? 0 : y + radius > height ? height : y
+  return { x: trueX, y: trueY }
+}
+
+function checkCircleOutBounded(
+  this: CanvasRoi,
+  startPoint: Point,
+  point: Point
+) {
+  const { bounded } = this.$opts
+  if (!bounded) {
+    return false
+  }
+  const { width, height } = this.$cvsSize
+  const radius = countDistance(startPoint, point)
+  const { x, y } = startPoint || {}
+  return (
+    x + radius > width ||
+    x - radius < 0 ||
+    y - radius < 0 ||
+    y + radius > height
+  )
+}
+
 function dragDrawingHandle(this: CanvasRoi, e: MouseEvent) {
-  !this.dragging &&
-    (this.dragging = !checkPointsEqual(
-      this.newPath.points[0],
-      getMousePoint(e)
-    ))
+  const { type, points } = this.newPath
+  if (!this.dragging) {
+    this.dragging = !checkPointsEqual(points[0], getMousePoint(e))
+  }
   const point = getMousePoint(e)
+  if (type === 'circle' && checkCircleOutBounded.call(this, points[0], point)) {
+    return
+  }
   this._drawRoiPaths(
-    this.newPath.type === 'rect' ? getRectEndPoint.call(this, point) : point
+    type === 'rect' ? getRectEndPoint.call(this, point) : point
   )
 }
 
@@ -85,7 +121,7 @@ function polygonAddPoint(
     lineIndex: -1
   })
 }
-
+/** 处理选区的修改 */
 function modifyChosePath(this: CanvasRoi, e: MouseEvent) {
   const newPoint = getMousePoint(e)
   const {
@@ -95,10 +131,16 @@ function modifyChosePath(this: CanvasRoi, e: MouseEvent) {
     lineIndex,
     inPath
   } = this.operateCursor || {}
-  if (!this.paths[pathIndex]) return
+  if (!this.paths[pathIndex]) {
+    return
+  }
   const { type, points } = this.paths[pathIndex]
 
-  if (!inPath && type === 'circle') {
+  if (
+    !inPath &&
+    type === 'circle' &&
+    !checkCircleOutBounded.call(this, points[0], newPoint)
+  ) {
     points[1] = newPoint
     this._drawRoiPathsWithOpe(newPoint)
     return
@@ -106,13 +148,36 @@ function modifyChosePath(this: CanvasRoi, e: MouseEvent) {
   const distance = [newPoint.x - x, newPoint.y - y]
   this.operateCursor && (this.operateCursor.startPoint = newPoint)
   const isRect = type === 'rect'
+  const { bounded } = this.$opts
+  let xOut = false
+  let yOut = false
+  if (bounded) {
+    const { width, height } = this.$cvsSize
+    if (type !== 'circle') {
+      xOut = points.some((point: Point) => {
+        const newX = point.x + distance[0]
+        return newX < 0 || newX > width
+      })
+      yOut = points.some((point: Point) => {
+        const newY = point.y + distance[1]
+        return newY < 0 || newY > height
+      })
+    } else {
+      const [center, endPoint] = points
+      const radius = countDistance(center, endPoint)
+      const [newCX, newCY] = [center.x + distance[0], center.y + distance[1]]
+      xOut = newCX - radius < 0 || newCX + radius > width
+      yOut = newCY - radius < 0 || newCY + radius > height
+    }
+  }
+
   const pointMove = (point: Point, xStatic?: boolean, yStatic?: boolean) => {
     !xStatic && (point.x += distance[0])
     !yStatic && (point.y += distance[1])
   }
-
+  // 如果鼠标指针在选区内，则平移选区
   if (inPath) {
-    points.forEach((point: Point) => pointMove(point))
+    points.forEach((point: Point) => pointMove(point, xOut, yOut))
     this._drawRoiPaths()
     return
   }
@@ -133,8 +198,7 @@ function modifyChosePath(this: CanvasRoi, e: MouseEvent) {
     this._drawRoiPathsWithOpe(isRect ? undefined : newPoint)
     return
   }
-
-  if (lineIndex && lineIndex >= 0) {
+  if (lineIndex !== undefined && lineIndex >= 0) {
     isRect
       ? lineIndex % 3 === 0
         ? pointMove(points[0], lineIndex === 0, lineIndex === 3)
@@ -438,7 +502,7 @@ function cvsMouseUp(this: CanvasRoi, e: MouseEvent): void {
           this,
           this.newPath.type === 'rect'
             ? getRectEndPoint.call(this, endPoint)
-            : endPoint
+            : getCircleEndPoint.call(this, endPoint)
         )
       : this._resetNewPath()
     return

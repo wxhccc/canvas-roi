@@ -35,7 +35,7 @@ function createConfig(config, plugins, tsOptions) {
     ...config,
     plugins: [tsPlugin, nodePlugin].concat(plugins),
     output,
-    watch: { include: 'src/*' }
+    watch: { include: 'src/**/*' }
   }
 }
 

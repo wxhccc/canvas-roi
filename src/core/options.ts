@@ -35,6 +35,8 @@ export function defaultOptions(): RoiOptions {
     },
     maxPath: 0,
     autoFit: false,
-    reverse: true
+    reverse: true,
+    rectFullPoint: false,
+    bounded: false
   }
 }

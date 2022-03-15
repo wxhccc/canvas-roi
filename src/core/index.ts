@@ -51,7 +51,8 @@ export default class CanvasRoi {
   choseIndex!: number
   resizeTicker!: number
   _events: { [key in CanvasMouseEvents]: (...args: any[]) => unknown }
-  _ElObserver!: ResizeObserver
+  _ElObserver: ResizeObserver | undefined
+  _ElScaleObserver: MediaQueryList | undefined
   // methods
   // methods
   _keyPress!: typeof cvsEventHandlers.keyPress
@@ -134,6 +135,13 @@ export default class CanvasRoi {
     if (!this.$el) return
     this._ElObserver = new ResizeObserver(this._sizeChangeWatcher.bind(this))
     this._ElObserver.observe(this.$el)
+    this._ElScaleObserver = window.matchMedia(
+      `(resolution: ${window.devicePixelRatio}dppx)`
+    )
+    this._ElScaleObserver.addEventListener(
+      'change',
+      this._scaleChangeWatcher.bind(this)
+    )
   }
 
   _sizeChangeWatcher(): void {
@@ -146,6 +154,13 @@ export default class CanvasRoi {
       this.resetCanvas()
     }, 50)
   }
+  _scaleChangeWatcher() {
+    console.log(123123123131)
+    if (!this.$cvs) {
+      return
+    }
+    this.resetCanvas()
+  }
 
   _autoFitChange(newValue?: boolean): void {
     if (newValue) {
@@ -154,7 +169,7 @@ export default class CanvasRoi {
       }
       return this._ElObserver.observe(this.$el as Element)
     }
-    return this._ElObserver.unobserve(this.$el as Element)
+    return this._ElObserver?.unobserve(this.$el as Element)
   }
 
   _mergeOptions<K extends keyof RoiOptions>(

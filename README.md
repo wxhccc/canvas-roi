@@ -43,6 +43,7 @@ roi.setValue(value)
 ```
 
 详细说明可查看仓库内文档
+[Document](https://github.com/wxhccc/canvas-roi/blob/master/Document.md)
 
 ## License
 
